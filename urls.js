@@ -1,0 +1,33 @@
+const fs = require("fs");
+const axios = require("axios");
+
+function readFile(path) {
+  fs.readFile(path, "utf8", async function (err, data) {
+    if (err) {
+      console.error(`Couldn't read file, ${err}`);
+      process.exit(1);
+    }
+
+    let urls = data.split("\n").filter((u) => u !== "");
+
+    for (let url of urls) {
+      let resp;
+
+      try {
+        resp = await axios.get(url);
+      } catch {
+        console.error(`Couldn't load ${url}`);
+        continue;
+      }
+      let fileName = new URL(url).hostname;
+
+      fs.writeFile(fileName, resp.data, "utf-8", function (err) {
+        if (err) {
+          console.error(`Couldn't write: ${fileName}`);
+        }
+        console.log(`Done writing: ${fileName}`);
+      });
+    }
+  });
+}
+readFile(process.argv[2]);
